@@ -77,7 +77,8 @@ def post(request):
 def profile(request, id):
     user = User.objects.get(id=id)
     return render(request, 'network/profile.html', {
-        "posts":Post.objects.filter(user=user.username)
+        "posts":Post.objects.filter(user=user.username),
+        "profile": user
     })
 
 def like(request):
