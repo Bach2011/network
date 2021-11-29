@@ -1,14 +1,17 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
+from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
-
-from .models import User
+import json
+from .models import User, Post
 
 
 def index(request):
-    return render(request, "network/index.html")
+    return render(request, "network/index.html", {
+        "posts": Post.objects.all(),
+    })
 
 
 def login_view(request):
@@ -61,3 +64,30 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+def post(request):
+    if request.method != "POST" :
+        return JsonResponse({"error":"you should come with post method"})
+    data = json.loads(request.body)
+    try:
+        Post.objects.create(user=request.user.username, content=data.get('content', ''), like=0)
+    except:
+        return JsonResponse({'error':""})
+    return JsonResponse({'result':"Success!!"})
+
+def profile(request, id):
+    user = User.objects.get(id=id)
+    return render(request, 'network/profile.html', {
+        "posts":Post.objects.filter(user=user.username)
+    })
+
+def like(request):
+    if request.method != "POST":
+        return JsonResponse({"error":"No post method found!"})
+    data = json.loads(request.body)
+    id = data.get('id', '')
+    try:
+        Post.get(id=id).like += 1
+    except:
+        return JsonResponse({"error":"Post not found!"})
+    return ({"result":"success"})
+    

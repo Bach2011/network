@@ -1,0 +1,15 @@
+{% extends "network/layout.html" %}
+{% block title %}{{user.username}} - Social network {% endblock %}
+{% block body %}
+<h1> <i class="far fa-user-circle"></i>{{user.username}}</h1>
+<div class="posts">
+{% for post in posts %}
+    <div class="post">
+        <span class="user">{{post.user}}</span>
+        <span class="time">{{post.time}}</span>
+        <br>
+        <p>{{post.content}}</p>
+        <i class="far fa-heart like"></i> <span class="likes">{{post.like}}</span>
+    </div>
+</div>
+{% endblock %}

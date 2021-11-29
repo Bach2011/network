@@ -1,0 +1,27 @@
+.navbar-brand {
+    text-align: center;
+}
+footer {
+    margin-bottom: 10px;
+}
+form {
+    text-align: center;
+    outline: none;
+    border-color: white;
+}
+body {
+    background-color: rgb(180, 180, 180);
+}
+.post {
+    background-color: white;
+    text-align: center;
+    width: fit-content;
+    border-radius: 10px;
+    padding: 20px;
+}
+.time {
+    color:rgb(180, 180, 180);
+}
+.posts {
+    text-align: center;
+}

@@ -1,5 +1,21 @@
 {% extends "network/layout.html" %}
 
 {% block body %}
-    TODO
+    <form action="{% url 'index' %}" method="POST">
+        {% csrf_token %}
+        <textarea rows="3" cols="40" placeholder="What's happening?"></textarea>
+        <input type="submit" value="post" class="btn btn-primary" id="post">
+    </form>
+    <br>
+    <div class="posts">
+    {% for post in posts %}
+    <div class="post">
+        <span class="user"><a href="{% url 'profile' 1%}">{{post.user}}</a><span aria-hidden="true"> · </span></span>
+        <span class="time">{{post.time}}</span><br>
+        {{post.content}}
+        <br>
+        <i class="far fa-heart like"></i> <span class="likes">{{post.like}}</span>
+    </div>
+    {% endfor %}
+    </div>
 {% endblock %}
