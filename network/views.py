@@ -1,16 +1,42 @@
 from django.contrib.auth import authenticate, login, logout
+from django.core import paginator
 from django.db import IntegrityError
+from django.db.models.deletion import PROTECT
 from django.http import HttpResponse, HttpResponseRedirect
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 import json
-from .models import User, Post
+from .models import Follow, User, Post, Like
+from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
-
+@login_required
 def index(request):
+    if request.method == "POST":
+        content = request.POST.get('content')
+        if len(content.strip()) <= 0:
+            return HttpResponseRedirect(reverse('index'))
+        try:
+            Like.objects.create(like=0, post_id=int(Post.objects.last().id+1))
+        except AttributeError:
+            Like.objects.create(like=0, post_id=1)
+        Post.objects.create(user=request.user.username, content=content, like=Like.objects.last())
+    if request.method == "POST" and request.POST.get('content') == None:
+        new_content = request.POST.get('edit')
+        post_id = request.POST.get('id')
+        post = Post.objects.get(id=post_id)
+        post.content = new_content
+        post.save()
+
+    posts = Post.objects.order_by('-time')
+    post_paginator = Paginator(posts, 10)
+    page_num = request.GET.get('page')
+    page = post_paginator.get_page(page_num)
     return render(request, "network/index.html", {
-        "posts": Post.objects.all(),
+        "count": posts.count,
+        "page": page,
+        "n": range(1, post_paginator.num_pages + 1)
     })
 
 
@@ -64,31 +90,57 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
-def post(request):
-    if request.method != "POST" :
-        return JsonResponse({"error":"you should come with post method"})
-    data = json.loads(request.body)
+@login_required
+def profile(request, username):
+    context = {}
     try:
-        Post.objects.create(user=request.user.username, content=data.get('content', ''), like=0)
+        user = User.objects.get(username=username)
+        context = {
+            "posts":Post.objects.filter(user=user.username).order_by('-time'),
+            "profile": user,
+            "follow": Follow.objects.filter(user=request.user, following=user).count()
+        }
     except:
-        return JsonResponse({'error':""})
-    return JsonResponse({'result':"Success!!"})
+        context = {
+            "error": "User not found!"        
+        }
+    return render(request, 'network/profile.html', context)
+    
 
-def profile(request, id):
-    user = User.objects.get(id=id)
-    return render(request, 'network/profile.html', {
-        "posts":Post.objects.filter(user=user.username),
-        "profile": user
-    })
-
-def like(request):
+def like(request, id):
     if request.method != "POST":
-        return JsonResponse({"error":"No post method found!"})
+        return JsonResponse({"error":"No post method found!", "post": id})
     data = json.loads(request.body)
-    id = data.get('id', '')
+    likes = data.get('like', '')
     try:
-        Post.get(id=id).like += 1
+        like = Like.objects.get(post_id=id)
+        like.like = likes
+        like.save()
+        post = Post.objects.get(id=id)
+        post.like = like
+        post.save()
     except:
-        return JsonResponse({"error":"Post not found!"})
+        return JsonResponse({"error":"Post method not found!"})
     return ({"result":"success"})
+
+def follow(request):
+    if request.method != "POST":
+        return JsonResponse({"error":"POST method not found!"})
+    data = json.loads(request.body)
+    follow_user = data.get('user', '')
+    unfollow = data.get('unfollow', '')
+    user = User.objects.get(username=request.user.username)
+    follow_user = User.objects.get(username=follow_user)
+    if unfollow:
+        Follow.objects.get(user=user, following=follow_user).delete()
+    else:
+        if Follow.objects.filter(user=user).count() > 0:
+            Follow.objects.get(user=user).following.add(follow_user)
+        else:
+            follow = Follow()
+            follow.user = user
+            follow.save()
+            follow.following.add(follow_user)
+    return JsonResponse({"message":"successfully follow/unfollow this user"})
+    
     

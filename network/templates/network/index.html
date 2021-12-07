@@ -3,19 +3,61 @@
 {% block body %}
     <form action="{% url 'index' %}" method="POST">
         {% csrf_token %}
-        <textarea rows="3" cols="40" placeholder="What's happening?"></textarea>
+        <textarea id="content" rows="3" cols="40" placeholder="What's happening?" name="content" autofocus></textarea>
         <input type="submit" value="post" class="btn btn-primary" id="post">
     </form>
     <br>
     <div class="posts">
-    {% for post in posts %}
+    {% for post in page %}
     <div class="post">
-        <span class="user"><a href="{% url 'profile' 1%}">{{post.user}}</a><span aria-hidden="true"> · </span></span>
+      <a href="#" class="edit">Edit</a>
+        <span class="user"><a href="{% url 'profile' post.user%}">{{post.user}}</a> · </span>
         <span class="time">{{post.time}}</span><br>
         {{post.content}}
         <br>
-        <i class="far fa-heart like"></i> <span class="likes">{{post.like}}</span>
-    </div>
+        <i class="far fa-heart like {{post.id}}"></i> <span class="likes {{post.id}}">{{post.like}}</span>
+    </div><br>
     {% endfor %}
     </div>
+    <!-- Paginator -->
+    {% if count > 10 %}
+    <nav aria-label="Paginator" id="paginator">
+        <ul class="pagination">
+        {% if page.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="{% url 'index' %}?page={{page.previous_page_number}}" tabindex="-1" >Previous</a>
+          </li>
+        {% endif %}
+          {% for i in n %}
+          <li class="page-item"><a class="page-link" href="{% url 'index' %}?page={{i}}">{{i}}</a></li>
+          {% endfor %}
+          {% if page.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="{% url 'index' %}?page={{page.next_page_number}}">Next</a>
+          </li>
+          {% endif %}
+        </ul>
+      </nav>
+      {% endif %}
+      <script type="text/javascript">
+        var csrf_token = "{{ csrf_token }}";
+        document.querySelectorAll('.like').forEach(element => {
+        element.addEventListener('click', () => {
+            let count = parseInt()
+            count++
+            element.innerText = count
+            fetch('/like' + id, {  
+            method: 'PUT',
+            body: JSON.stringify({
+              like: count
+            }),
+            headers: {
+                 'X-CSRFToken': csrf_token
+            },
+        })
+      .then(response => response.json())
+      .then(data => console.log(data))
+      })
+    })
+      </script>
 {% endblock %}

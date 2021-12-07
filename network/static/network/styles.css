@@ -10,7 +10,7 @@ form {
     border-color: white;
 }
 body {
-    background-color: rgb(209, 209, 209);
+    background-color: rgb(240, 240, 240);
 }
 .post {
     background-color: white;
@@ -23,5 +23,11 @@ body {
     color:rgb(180, 180, 180);
 }
 .posts {
+    text-align: center;
+}
+#paginator {
+    text-align: center;
+}
+h3 {
     text-align: center;
 }

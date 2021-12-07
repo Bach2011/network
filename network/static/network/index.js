@@ -1,38 +1,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     //disabled button
+if(document.querySelector("#post")){
     document.querySelector('#post').disabled = true;
     document.querySelector('textarea').onkeyup = () => {
-        if(document.querySelector('textarea').value.length > 0){
+        if(document.querySelector('textarea').value.trim().length > 0){
             document.querySelector('#post').disabled = false;
         }else {
             document.querySelector('#post').disabled = true;
         }
-    }
-    document.querySelector('form').onsubmit = post;
-    document.querySelector('.like').addEventListener('click', function() {
-        if(this.style.color == "red"){
-            document.querySelector('.likes').innerText = 0;
-            this.style.color = 'black'
-            this.className = 'far fa-heart'
-        }else {
-            document.querySelector('.likes').innerText = 1;
-            this.style.color = 'red';
-            this.className = 'fas fa-heart'
+    } 
+}
+    document.querySelectorAll('.edit').forEach(button => {
+        button.onclick = function() {
+            alert(button.className)
         }
     })
 })
-function post() {
-    let content = document.querySelector('textarea').value;
-    fetch('/post', {
-        method: "POST",
-        body: JSON.stringify({
-            content: content
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if(!data.error){
-            console.log("haha")
-        }
-    })
+function edit(post_id) {
+    new_content = document.querySelector(`#edit_post${post_id}`)
 }
