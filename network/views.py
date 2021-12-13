@@ -7,21 +7,29 @@ from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 import json
-from .models import Follow, User, Post, Like
+from .models import Follow, Notification, User, Post, Like
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 
 @login_required
 def index(request):
     if request.method == "POST":
-        content = request.POST.get('content')
+        content = str(request.POST.get('content')).replace(":D", "😁").replace(":)", "🙂")
         if len(content.strip()) <= 0:
             return HttpResponseRedirect(reverse('index'))
         try:
             Like.objects.create(like=0, post_id=int(Post.objects.last().id+1))
         except AttributeError:
             Like.objects.create(like=0, post_id=1)
-        Post.objects.create(user=request.user.username, content=content, like=Like.objects.last())
+        Post.objects.create(user=request.user, content=content, like=Like.objects.last())
+        if(Follow.objects.filter(user=request.user).exists()):
+            users = Follow.objects.get(user=request.user).following.all()
+            for user in users:
+                user = User.objects.get(username=user)
+                try:
+                    Notification.get(user=user).posts.add(Post.objects.last().id)
+                except:
+                    Notification.objects.create(user=user, posts=Post.objects.last().id)
     if request.method == "POST" and request.POST.get('content') == None:
         new_content = request.POST.get('edit')
         post_id = request.POST.get('id')
@@ -95,10 +103,16 @@ def profile(request, username):
     context = {}
     try:
         user = User.objects.get(username=username)
+        try:
+            follow = Follow.objects.get(user=user).following.count()
+        except:
+            follow = 0
         context = {
-            "posts":Post.objects.filter(user=user.username).order_by('-time'),
+            "posts":Post.objects.filter(user=user).order_by('-time'),
             "profile": user,
-            "follow": Follow.objects.filter(user=request.user, following=user).count()
+            "following": follow,
+            "followers": Follow.objects.filter(following=user).count(),
+            "follow": Follow.objects.filter(user=request.user, following=user).exists()
         }
     except:
         context = {
@@ -124,12 +138,18 @@ def like(request, id):
     return ({"result":"success"})
 
 def follow(request):
-    if request.method != "POST":
-        return JsonResponse({"error":"POST method not found!"})
+    if request.method == "GET":
+        follow = Follow.objects.get(user=request.user).following.all()
+        posts = []
+        for user in follow:
+            posts.append(Post.objects.filter(user=user))
+        return render(request, "network/following.html", {
+            "posts":posts       
+        })
     data = json.loads(request.body)
     follow_user = data.get('user', '')
     unfollow = data.get('unfollow', '')
-    user = User.objects.get(username=request.user.username)
+    user = User.objects.get(username=request.user)
     follow_user = User.objects.get(username=follow_user)
     if unfollow:
         Follow.objects.get(user=user, following=follow_user).delete()
@@ -142,5 +162,3 @@ def follow(request):
             follow.save()
             follow.following.add(follow_user)
     return JsonResponse({"message":"successfully follow/unfollow this user"})
-    
-    

@@ -5,11 +5,11 @@ class Like(models.Model):
     post_id = models.IntegerField()
     def __str__(self):
         return f"{self.like}"
-class User(AbstractUser):
+class User(AbstractUser, models.Model):
     def __str__(self):
         return f'{self.username}'
 class Post(models.Model):
-    user = models.CharField(max_length=64)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     content =  models.CharField(max_length=2000)
     time = models.DateTimeField(auto_now_add=True)
     like = models.ForeignKey(Like, on_delete=models.CASCADE, related_name="likes", default=0)
@@ -21,3 +21,7 @@ class Post(models.Model):
 class Follow(models.Model):
     user = models.ForeignKey(User, related_name="user", on_delete=models.CASCADE, unique=False)
     following = models.ManyToManyField(User, related_name="following")
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    posts = models.ManyToManyField(Post)

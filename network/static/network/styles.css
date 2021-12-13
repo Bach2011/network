@@ -31,3 +31,13 @@ body {
 h3 {
     text-align: center;
 }
+nav > div > ul > li:hover {
+    opacity: 90%;
+}
+.notification {
+    text-align: center;
+    background-color: rgb(230, 230, 230);
+    color: black;
+    margin: 20px;
+    border-radius: 5px;
+}

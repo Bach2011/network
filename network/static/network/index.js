@@ -10,11 +10,7 @@ if(document.querySelector("#post")){
         }
     } 
 }
-    document.querySelectorAll('.edit').forEach(button => {
-        button.onclick = function() {
-            alert(button.className)
-        }
-    })
+    
 })
 function edit(post_id) {
     new_content = document.querySelector(`#edit_post${post_id}`)

@@ -9,13 +9,14 @@
     <br>
     <div class="posts">
     {% for post in page %}
-    <div class="post">
-      <a href="#" class="edit">Edit</a>
+    <div id="post{{post.id}}" class="post">
+      <a href="#" class="edit" id="edit{{post.id}}">Edit</a>
         <span class="user"><a href="{% url 'profile' post.user%}">{{post.user}}</a> · </span>
         <span class="time">{{post.time}}</span><br>
-        {{post.content}}
+        <span class="content content{{post.id}}">{{post.content}}</span>
+        <div class="edit{{post.id}}" style="display:none;"><textarea class="edit-form">{{post.content}}</textarea><button class=" btn btn-primary">Save</button></div>
         <br>
-        <i class="far fa-heart like {{post.id}}"></i> <span class="likes {{post.id}}">{{post.like}}</span>
+        <i class="far fa-heart like{{post.id}}"></i> <span class="likes{{post.id}}">{{post.like}}</span>
     </div><br>
     {% endfor %}
     </div>
@@ -46,7 +47,7 @@
             let count = parseInt()
             count++
             element.innerText = count
-            fetch('/like' + id, {  
+            fetch('/like' + element.id, {  
             method: 'PUT',
             body: JSON.stringify({
               like: count
@@ -58,6 +59,12 @@
       .then(response => response.json())
       .then(data => console.log(data))
       })
+    })
+    document.querySelectorAll('.edit').forEach(button => {
+        button.onclick = function() {
+            document.querySelector(`.${this.id}`).style.display = 'block';
+            document.querySelector(`.content${this.id.slice(4,6)}`).style.display = 'none'
+        }
     })
       </script>
 {% endblock %}

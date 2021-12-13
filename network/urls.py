@@ -1,4 +1,5 @@
 
+from django.db.models.fields import related
 from django.urls import path
 
 from . import views
@@ -11,5 +12,5 @@ urlpatterns = [
     path("profile/<str:username>", views.profile, name="profile"),
     #API
     path("like/<int:id>", views.like, name="like"),
-    path("profile", views.follow, name="follow")
+    path("follow", views.follow, name="follow")
 ]

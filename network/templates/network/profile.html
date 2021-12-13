@@ -1,12 +1,14 @@
 {% extends "network/layout.html" %}
-{% block title %}{{user.username}} - Social network {% endblock %}
+{% block title %}{{user.username}} - Roll up {% endblock %}
 {% block body %}
 {% if error %}
 <h3>{{error}}</h3>
 {% else %}
+Following: {{following}}
+Followers: <span class="followers">{{followers}}</span>
 <h1> <i class="far fa-user-circle"></i>{{profile.username}}</h1>
 {% if profile.username != user.username %}
-{% if follow > 0%}
+{% if follow %}
 <button id="{{profile.username}}" class="btn btn-primary follow" >Unfollow</button>
 {% else %}
 <button id="{{profile.username}}" class="btn btn-primary follow">Follow</button>
@@ -45,6 +47,9 @@
             .then(response => response.json())
             .then(data => {
                this.innerText = 'Unfollow'
+               let followers = parseInt(document.querySelector('.followers').innerText)
+               followers++;
+               document.querySelector('.followers').innerText = followers
             })}
             else {
                //Unfollow
@@ -60,7 +65,10 @@
                })
                .then(response => response.json())
                .then(data => {
-                  this.innerText = 'Unfollow'
+                  this.innerText = 'Follow'
+                  let followers = parseInt(document.querySelector('.followers').innerText)
+                  followers--;
+                  document.querySelector('.followers').innerText = followers
                })
                }
          })

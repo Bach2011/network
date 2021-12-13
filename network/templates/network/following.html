@@ -1,0 +1,19 @@
+{% extends "network/layout.html" %}
+{% block title %}Following - Social network {% endblock %}
+{% block body %}
+<br>
+{% for post in posts %}
+{% for post in post %}
+    <div class="post">
+        <span class="user">{{post.user}}</span>
+        <span class="time">{{post.time}}</span>
+        <br>
+        <p>{{post.content}}</p>
+        <i class="far fa-heart like"></i> <span class="likes">{{post.like}}</span>
+    </div><br><br>
+{% empty %}
+<h3>No post to display</h3>
+{% endfor %}
+{% endfor %}
+</div>
+{% endblock %}
