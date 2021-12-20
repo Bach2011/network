@@ -7,14 +7,14 @@ from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 import json
-from .models import Follow, Notification, User, Post, Like
+from .models import Follow, User, Post, Like
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 
 @login_required
 def index(request):
-    if request.method == "POST":
-        content = str(request.POST.get('content')).replace(":D", "😁").replace(":)", "🙂")
+    if request.method == "POST" and request.POST.get('content') != None:
+        content = str(request.POST.get('content'))
         if len(content.strip()) <= 0:
             return HttpResponseRedirect(reverse('index'))
         try:
@@ -22,17 +22,11 @@ def index(request):
         except AttributeError:
             Like.objects.create(like=0, post_id=1)
         Post.objects.create(user=request.user, content=content, like=Like.objects.last())
-        if(Follow.objects.filter(user=request.user).exists()):
-            users = Follow.objects.get(user=request.user).following.all()
-            for user in users:
-                user = User.objects.get(username=user)
-                try:
-                    Notification.get(user=user).posts.add(Post.objects.last().id)
-                except:
-                    Notification.objects.create(user=user, posts=Post.objects.last().id)
+    # edit feature
     if request.method == "POST" and request.POST.get('content') == None:
-        new_content = request.POST.get('edit')
-        post_id = request.POST.get('id')
+        data = json.loads(request.body)
+        new_content = str(data.get('newcontent', '')).replace(':D', '😁').replace(":)", '🙂')
+        post_id = data.get('post', '')
         post = Post.objects.get(id=post_id)
         post.content = new_content
         post.save()
@@ -119,33 +113,42 @@ def profile(request, username):
             "error": "User not found!"        
         }
     return render(request, 'network/profile.html', context)
-    
-
+@login_required
 def like(request, id):
     if request.method != "POST":
         return JsonResponse({"error":"No post method found!", "post": id})
     data = json.loads(request.body)
     likes = data.get('like', '')
+    unlike = data.get('unlike', '')
     try:
         like = Like.objects.get(post_id=id)
         like.like = likes
         like.save()
         post = Post.objects.get(id=id)
+        if unlike:
+            post.liked.remove(request.user)
+        else:
+            post.liked.add(request.user)
         post.like = like
         post.save()
     except:
         return JsonResponse({"error":"Post method not found!"})
-    return ({"result":"success"})
-
+    return JsonResponse({"result":"success"})
+@login_required
 def follow(request):
     if request.method == "GET":
-        follow = Follow.objects.get(user=request.user).following.all()
-        posts = []
-        for user in follow:
-            posts.append(Post.objects.filter(user=user))
-        return render(request, "network/following.html", {
-            "posts":posts       
-        })
+        try:
+            follow = Follow.objects.get(user=request.user).following.all()
+            posts = []
+            for user in follow:
+                posts.append(Post.objects.filter(user=user))
+            return render(request, "network/following.html", {
+                "posts":posts       
+            })
+        except:
+            return render(request, "network/following.html", {
+                "message":"You haven't follow anyone :)"
+            })
     data = json.loads(request.body)
     follow_user = data.get('user', '')
     unfollow = data.get('unfollow', '')

@@ -10,13 +10,20 @@
     <div class="posts">
     {% for post in page %}
     <div id="post{{post.id}}" class="post">
-      <a href="#" class="edit" id="edit{{post.id}}">Edit</a>
+      {% if request.user == post.user %}
+      <a href="#{{post.id}}" class="edit" id="edit{{post.id}}">Edit</a>
+      {% endif %}
         <span class="user"><a href="{% url 'profile' post.user%}">{{post.user}}</a> · </span>
         <span class="time">{{post.time}}</span><br>
         <span class="content content{{post.id}}">{{post.content}}</span>
-        <div class="edit{{post.id}}" style="display:none;"><textarea class="edit-form">{{post.content}}</textarea><button class=" btn btn-primary">Save</button></div>
+        <div class="edit{{post.id}}" style="display:none;"><textarea class="edit-form edit-form{{post.id}}">{{post.content}}</textarea><button class="submit btn btn-primary" id="{{post.id}}">Save</button></div>
         <br>
-        <i class="far fa-heart like{{post.id}}"></i> <span class="likes{{post.id}}">{{post.like}}</span>
+        {% if request.user in post.liked.all %}
+        <i class="fas fa-heart liked like like{{post.id}}" id="l{{post.id}}"></i>
+        {% else %}
+        <i class="far fa-heart like like{{post.id}}" id="l{{post.id}}"></i>
+        {% endif %}
+         <span class="likes{{post.id}}">{{post.like}}</span>
     </div><br>
     {% endfor %}
     </div>
@@ -41,30 +48,63 @@
       </nav>
       {% endif %}
       <script type="text/javascript">
+        // like
         var csrf_token = "{{ csrf_token }}";
         document.querySelectorAll('.like').forEach(element => {
         element.addEventListener('click', () => {
-            let count = parseInt()
-            count++
-            element.innerText = count
-            fetch('/like' + element.id, {  
-            method: 'PUT',
-            body: JSON.stringify({
-              like: count
-            }),
-            headers: {
-                 'X-CSRFToken': csrf_token
-            },
-        })
-      .then(response => response.json())
-      .then(data => console.log(data))
+          let unlike;
+            let count = parseInt(document.querySelector(`.likes${element.id.slice(1)}`).innerText)
+            if(element.className.includes("liked")){
+              unlike = true
+              element.className = element.className.replace('fas','far').replace('liked', 'like')
+              element.style.color = 'black'
+              count--
+            }else {
+              element.className = element.className.replace('far','fas').replace('like', 'liked')
+              element.style.color = 'red'
+              unlike = false
+              count++
+            }
+            fetch('/like/' + element.id.slice(1), {  
+              method: 'POST',
+              body: JSON.stringify({
+                like: count,
+                unlike: unlike
+              }),
+              headers: {
+                  'X-CSRFToken': csrf_token
+              },
+            })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        document.querySelector(`.likes${element.id.slice(1)}`).innerText = count;
       })
     })
+    //edit
     document.querySelectorAll('.edit').forEach(button => {
         button.onclick = function() {
             document.querySelector(`.${this.id}`).style.display = 'block';
             document.querySelector(`.content${this.id.slice(4,6)}`).style.display = 'none'
         }
+    })
+    document.querySelectorAll(".submit").forEach(button => {
+      button.onclick = () => {
+        let id = button.id
+        let csrf_token = '{{csrf_token}}'
+        document.querySelector(`.content${id}`).innerText = document.querySelector(`.edit-form${id}`).value
+        fetch("/", {
+          method:'POST',
+          body: JSON.stringify({
+            'newcontent':document.querySelector(`.edit-form${id}`).value,
+            'post':id
+          }),
+          headers: {
+            'X-CSRFToken': csrf_token
+          },
+        })
+        document.querySelector(`.content${id}`).style.display = "block";
+        document.querySelector(`.edit${id}`).style.display = "none"
+      }
     })
       </script>
 {% endblock %}

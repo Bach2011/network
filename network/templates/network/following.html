@@ -2,6 +2,9 @@
 {% block title %}Following - Social network {% endblock %}
 {% block body %}
 <br>
+{% if message %}
+<h3>{{message}}</h3>
+{% else %}
 {% for post in posts %}
 {% for post in post %}
     <div class="post">
@@ -9,11 +12,12 @@
         <span class="time">{{post.time}}</span>
         <br>
         <p>{{post.content}}</p>
-        <i class="far fa-heart like"></i> <span class="likes">{{post.like}}</span>
+        <i class="far fa-heart like" id="{{post.id}}"></i> <span class="likes">{{post.like}}</span>
     </div><br><br>
 {% empty %}
 <h3>No post to display</h3>
 {% endfor %}
 {% endfor %}
+{% endif %}
 </div>
 {% endblock %}
